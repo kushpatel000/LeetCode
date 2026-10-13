@@ -1,0 +1,44 @@
+[
+    [
+        ["aa", "a"],
+        false   
+    ],
+    [
+        ["aa", "a*"],
+        true
+    ],
+    [
+        ["cb", "?a"],
+        false
+    ],
+    [   
+        ["adceb", "*a*b"],
+        true
+    ],
+    [
+        ["acdcb", "a*c?b"],
+        false
+    ],
+    [
+        ["a", "a*?"],
+        false
+    ],
+    [
+        ["bbaaababbaaababababbb", "*a*****bb"],
+        true
+    ],
+    [
+        [
+            "bbbbbbbabbaabbabbbbaaabbabbabaaabbababbbabbbabaaabaab", 
+            "b*b*ab**ba*b**b***bba"
+        ],
+        false
+    ],
+    [
+        [
+            "bbaaaabaaaaabbabbabbabbababaabababaabbabaaabbaababababbabaabbabbbbbbaaaaaabaabbbbbabbbbabbabababaaaaa",
+            "******aa*bbb*aa*a*bb*ab***bbba*a*babaab*b*aa*a****"
+        ],
+        false
+    ]
+]

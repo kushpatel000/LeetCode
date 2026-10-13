@@ -1,0 +1,14 @@
+[
+    [
+        ["great", "rgeat"],
+        true
+    ],
+    [
+        ["abcde", "caebd"],
+        false
+    ],
+    [
+        ["a", "a"],
+        true
+    ]
+]

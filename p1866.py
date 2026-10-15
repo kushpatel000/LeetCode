@@ -54,6 +54,42 @@ class Solution:
         return ((n-1) * self.RS_opt(n-1,k) + self.RS_opt(n-1,k-1))%M
 
 
+    @cache
+    def RS_opt_2(self, n: int, k: int) -> int:
+        if 0 in (n,k): return 0
+        if n == k: return 1
+        if k == 1: return self._fact(n-1)
+
+        R = range(2,n)
+        res = 0
+        for e in itertools.combinations(R, n-k):
+            res += math.prod(e) % M
+        for e in itertools.combinations(R, n-k-1):
+            res += math.prod(e) % M
+
+        return res % M
+
+
+    def RS_opt_3(self, n: int, k: int) -> int:
+        # self._dc = dict()
+
+        facts = [1]*(n+1)
+        for i in range(1,n+1):
+            facts[i] = (facts[i-1]*i) %M
+
+        @cache
+        def soln(n_,k_):
+            # self._dc[(n_,k_)] = self._dc.get((n_,k_), 0) + 1
+            # if 0 in (n_,k_): return 0
+            if n_ == k_: return 1
+            if k_ == 1: return facts[n_-1]
+
+            return ( (n_-1)*soln(n_-1,k_) + soln(n_-1,k_-1) ) % M
+
+        
+        return soln(n,k) 
+                        
+
 
 
 if __name__ == "__main__":
@@ -61,34 +97,20 @@ if __name__ == "__main__":
     sol = Solution()
 
     test_funcs = [
-        sol.rearrangeSticks,
-        sol.RS_opt
+        # sol.rearrangeSticks,
+        sol.RS_opt,
+        # sol.RS_opt_2,
+        sol.RS_opt_3,
     ]
     
     test_cases = ts.load_test_cases(__file__)
 
-    # ts.test_all(
-    #     test_cases,
-    #     test_funcs,
-    #     # check_thresh = 1e-5,
-    #     display = True,
-    #     test_only = True
-    # )
+    ts.test_all(
+        test_cases,
+        test_funcs,
+        # check_thresh = 1e-5,
+        # display = True,
+        # test_only = True
+    )
 
-
-
-
-    n = 5
-
-    for k in range(n+1):
-        p = sol.RS_opt(n,k)
-        print(f'C({n},{k}) = {math.comb(n,k):2,d} P({n},{k}) = {p:3,d}')
-    print()
-
-    n = 7
-
-    for k in range(n+1):
-        p = sol.RS_opt(n,k)
-        print(f'C({n},{k}) = {math.comb(n,k):2,d} P({n},{k}) = {p:3,d}')
-
-    RES = 
+    # print(sol._dc)

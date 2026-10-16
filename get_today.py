@@ -99,7 +99,7 @@ def export_python_snippet(qdata:dict, link:str) -> None:
     for cs in code_snippets:
         if cs.get('langSlug') == 'python3':
             python_snippet = cs.get('code')
-        elif cs.get('langSlug') == 'python' and python_snippet != '':
+        elif cs.get('langSlug') == 'python' and python_snippet == '':
             python_snippet = cs.get('code')
 
     problem_number = int(qdata.get('questionFrontendId'))

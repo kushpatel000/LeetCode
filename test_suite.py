@@ -129,7 +129,7 @@ def test_all(
 
         if display: print(f'\n==== Test Case {i} ==== \n')
 
-        for i, fnc in enumerate(func_list):
+        for j, fnc in enumerate(func_list):
             s = check_soln(
                 fnc, 
                 inp, 
@@ -159,7 +159,7 @@ def test_all(
     # Print out summary
     print('---- Results ----')
     for i, test_line in enumerate(successes):
-        print(f'Test {i:d}:', ''.join(['❌✅'[s] for s in test_line]))
+        print(f'Test {i:d}:', ''.join(['❌✅'[int(s)] for s in test_line]))
     print()
 
     if test_only: return

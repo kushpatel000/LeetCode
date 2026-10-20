@@ -21,6 +21,12 @@ def _truncated_print(v, lim:int=80) -> None:
     else:
         print(vs[:lim] + ' ...')
 
+def eval_input(inp):
+    if isinstance(inp, str) and inp.startswith('eval~~'):
+        return eval( inp.removeprefix('eval~~') )
+    return inp
+
+
 
 def check_soln(
     func,
@@ -30,8 +36,9 @@ def check_soln(
     nargs:int,
     display:bool=False
 ) -> bool:
+    inp_e = eval_input(inp)
     # validate the results
-    result = func( deepcopy(inp) ) if nargs == 1 else func( *deepcopy(inp) )
+    result = func( deepcopy(inp_e) ) if nargs == 1 else func( *deepcopy(inp_e) )
     success = validation_func(result, out)
     
     if display:
@@ -53,8 +60,11 @@ def time_soln(
     nargs:int,
     repeat:int = 5
 ) -> Tuple[float, bool]:
+
+    inp_e = eval_input(inp)
+    
     time_results = timeit.repeat(
-        lambda: func(inp) if nargs == 1 else func(*inp),
+        lambda: func(inp_e) if nargs == 1 else func(*inp_e),
         number=10000,
         repeat=repeat
     )
@@ -115,7 +125,7 @@ def test_all(
     nargs = len(inspect.signature(func_list[0]).parameters)
     
     # for i, (inp, out) in tqdm.tqdm(enumerate(test_cases)):
-    for i, (inp, out) in enumerate(test_cases):
+    for i, (inp, out) in enumerate(tqdm.tqdm(test_cases)):
         test_passes = list()
         test_times  = list()
 

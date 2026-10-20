@@ -26,8 +26,6 @@ def eval_input(inp):
         return eval( inp.removeprefix('eval~~') )
     return inp
 
-
-
 def check_soln(
     func,
     inp,
@@ -38,6 +36,7 @@ def check_soln(
 ) -> bool:
     inp_e = eval_input(inp)
     # validate the results
+    inp_e = eval_input(inp)
     result = func( deepcopy(inp_e) ) if nargs == 1 else func( *deepcopy(inp_e) )
     success = validation_func(result, out)
     

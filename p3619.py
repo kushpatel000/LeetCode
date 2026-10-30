@@ -1,5 +1,5 @@
 # 3619. Count Islands With Total Value Divisible by K [Medium]
-# https://leetcode .com/problems/count-islands-with-total-value-divisible-by-k/ 
+# https://leetcode.com/problems/count-islands-with-total-value-divisible-by-k/ 
 
 from typing import List
 import test_suite as ts

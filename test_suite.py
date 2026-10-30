@@ -65,7 +65,7 @@ def time_soln(
     
     time_results = timeit.repeat(
         lambda: func(inp_e) if nargs == 1 else func(*inp_e),
-        number=10000,
+        number=100,
         repeat=repeat
     )
     best_time = min(time_results)

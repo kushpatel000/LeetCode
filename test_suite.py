@@ -57,7 +57,8 @@ def time_soln(
     inp,
     display,
     nargs:int,
-    repeat:int = 5
+    repeat:int = 5,
+    number:int = 1000
 ) -> Tuple[float, bool]:
 
     inp_e = eval_input(inp)
@@ -113,7 +114,9 @@ def test_all(
     func_list: List[Tuple],
     display:bool = False,
     check_thresh:float=None,
-    test_only:bool=False
+    test_only:bool=False,
+    repeat:int=5,
+    number:int=1000
 ) -> None:
 
     n_func = len(func_list)
@@ -146,8 +149,9 @@ def test_all(
                     fnc,
                     inp,
                     display = display,
-                    repeat = 5,
-                    nargs = nargs
+                    nargs = nargs, 
+                    repeat = repeat,
+                    number = number,
                 )
                 test_times.append(t)
 

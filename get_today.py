@@ -4,6 +4,9 @@ import requests
 import datetime
 from pathlib import Path
 import json
+from bs4 import BeautifulSoup
+import textwrap
+import re
 
 URL = 'https://leetcode.com/graphql'
 HEADERS = {
@@ -13,14 +16,14 @@ HEADERS = {
 
 
 QUERY_GETDAILYPROBLEMNUMBER = '''
-    query getDailyProblem {
-        activeDailyCodingChallengeQuestion {
-            question {
-                questionFrontendId
-            }
+query getDailyProblem {
+    activeDailyCodingChallengeQuestion {
+        question {
+            questionFrontendId
         }
     }
-    '''
+}
+'''
 
     
 QUERY_GETDAILYPROBLEM = '''
@@ -48,17 +51,51 @@ query getDailyProblem {
 }
 '''
 
+QUERY_GETPROBLEMBYNUMBER = '''
+query getProblemSlug($search: String) {
+  problemsetQuestionList: questionList(
+    categorySlug: ""
+    limit: 1
+    skip: 0
+    filters: { searchKeywords: $search }
+  ) {
+    questions: data {
+      questionFrontendId
+      title
+      titleSlug
+      difficulty
+      content
 
-def send_leetcode_request(query:str) -> requests.Response:
+      exampleTestcaseList
+
+      codeSnippets {
+        lang
+        langSlug
+        code
+      }
+    }
+  }
+}
+'''
+
+
+def send_leetcode_request(query:str|dict) -> requests.Response:
+    if isinstance(query, str):
+        payload = {'query':query}
+    elif isinstance(query, dict):
+        payload = query
+    else:
+        raise ValueError(f'Expected `query` as type str or dict, got `{type(query)}`')
+
+
     resp = requests.post(
         url=URL,
         headers=HEADERS,
-        json={'query':query},
+        json=payload,
     )
     resp.raise_for_status()
 
     return resp
-
 
 
 def get_problem_number() -> int:
@@ -70,10 +107,12 @@ def get_problem_number() -> int:
             .get('question',{})
             .get('questionFrontendId','-1')
     )
+    # print(json.dumps(resp.json(), indent=2))
     qid = int(qid)
     if qid == -1: raise ValueError('`get_problem_number` - issue parsing data')
 
     return qid
+
 
 def check_exists(qid:int) -> bool:
     loc = Path.cwd()
@@ -92,7 +131,21 @@ def check_exists(qid:int) -> bool:
     return flag
 
 
-def export_python_snippet(qdata:dict, link:str) -> None:
+def _clean_content(content_html:str) -> str:
+    soup = BeautifulSoup(content_html, 'html.parser')
+    for sup in soup.find_all('sup'):
+        sup.replace_with( f'^{sup.text}' )
+
+    content_str = soup.text
+    content_str_wrapped = []
+    for line in content_str.split('\n'):
+        wrapped_ = [f'#  {wline}' for wline in textwrap.wrap(line, width=80)]
+        content_str_wrapped.extend(wrapped_)
+
+    return '\n'.join(content_str_wrapped)
+
+
+def export_python_snippet(qdata:dict) -> None:
     code_snippets = qdata.get('codeSnippets')
 
     python_snippet = ''
@@ -102,13 +155,30 @@ def export_python_snippet(qdata:dict, link:str) -> None:
         elif cs.get('langSlug') == 'python' and python_snippet == '':
             python_snippet = cs.get('code')
 
-    problem_number = int(qdata.get('questionFrontendId'))
-    problem_title  = qdata.get('title')
-    problem_diff   = qdata.get('difficulty')
+    try:
+        function_name = re.search(
+            pattern=r'def (.*)\(',
+            string=python_snippet
+        ).group(1)
+    except Exception as e:
+        print(f'Caught exception {type(e)} {e}')
+        function_name = 'XXXXXX'
+
+
+    problem_number  = int(qdata.get('questionFrontendId'))
+    problem_title   = qdata.get('title')
+    problem_diff    = qdata.get('difficulty')
+    problem_content = _clean_content(qdata.get('content'))
+    problem_link    = f'https://leetcode.com/problems/{qdata.get('titleSlug')}'
 
     python_code_sugar = f'''
 # {problem_number:04d}. {problem_title} [{problem_diff}]
-# {link} 
+# {problem_link} 
+
+{problem_content}
+
+###############################################################################
+###############################################################################
 
 from typing import List
 import test_suite as ts
@@ -124,7 +194,7 @@ if __name__ == '__main__':
     sol = Solution()
 
     test_funcs = [
-        
+        sol.{function_name}
     ]
 
     test_cases = ts.load_test_cases(__file__)
@@ -157,7 +227,7 @@ def export_test_cases(qdata:dict) -> None:
     test_cases = list()
     for ex in qdata.get('exampleTestcaseList'):
         case = [
-            eval(ex),
+            eval(ex.replace('\n', ',')),
             None # outputs to be filled in later
         ]
         test_cases.append(case)
@@ -175,10 +245,34 @@ def get_todays_problem() -> tuple[str, dict]:
     qdata = data.get('question')
     assert qdata is not None, '`get_todays_problem` - No question data'
     
-    
     return link, qdata
 
 
+def get_problem_by_number(number:int) -> tuple[str, dict]:
+    resp = send_leetcode_request({
+        'query': QUERY_GETPROBLEMBYNUMBER,
+        'variables': {'search':str(number)}
+    })
+    data = (
+        resp.json()
+            .get('data',{})
+            .get('problemsetQuestionList',{})
+            .get('questions',[])
+    )
+
+    if len(data) == 0:
+        raise ValueError(f'No result found for Problem {number}.')
+    elif len(data) > 1:
+        print(f'search: {number}')
+        print('found:')
+        for q in data:
+            qid = data.get('questionFrontendId')
+            ttl = data.get('title')
+            print(f' - {qid:4s}. {ttl}')
+        raise ValueError(f'Multiple results found for Problem {number}.')
+
+    question_data = data[0]
+    return question_data
 
 
 
@@ -196,12 +290,13 @@ def main():
     # if not, pull it
     print(f'Pulling problem number {qid}...')
 
-    link, question = get_todays_problem()
+    question_data = get_problem_by_number(qid)
 
-    export_python_snippet(question, link)    
-    export_test_cases(question)
+    export_python_snippet(question_data)    
+    export_test_cases(question_data)
 
 
 
-if __name__ == main():
+if __name__ == '__main__':
+    # get_problem_by_number(1)
     main()

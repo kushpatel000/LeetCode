@@ -274,11 +274,11 @@ def get_problem_by_number(number:int) -> tuple[str, dict]:
     question_data = data[0]
     return question_data
 
-
-
-def main():
-    # get today's problem number
-    qid = get_problem_number()
+def download_and_export_problem(qid:str):
+    if qid.isnumeric():
+        qid = int(qid)
+    else:
+        qid = get_problem_number()
 
     # check if it already exists
     check = check_exists(qid)
@@ -295,6 +295,9 @@ def main():
     export_python_snippet(question_data)    
     export_test_cases(question_data)
 
+
+def main():
+    download_and_export_problem()
 
 
 if __name__ == '__main__':

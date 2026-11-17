@@ -7,6 +7,7 @@ import json
 from bs4 import BeautifulSoup
 import textwrap
 import re
+import subprocess, shutil
 
 URL = 'https://leetcode.com/graphql'
 HEADERS = {
@@ -215,7 +216,8 @@ if __name__ == '__main__':
     python_file.write_text(python_code_sugar)
     print(f'Exported to:')
     print(f'  {python_file}')
-
+    
+    return python_file
 
 
 def export_test_cases(qdata:dict) -> None:
@@ -233,6 +235,7 @@ def export_test_cases(qdata:dict) -> None:
         test_cases.append(case)
 
     test_file.write_text(json.dumps(test_cases, indent=4))
+    return test_file
 
 
 
@@ -292,8 +295,17 @@ def download_and_export_problem(qid:str):
 
     question_data = get_problem_by_number(qid)
 
-    export_python_snippet(question_data)    
-    export_test_cases(question_data)
+    # export the information
+    py_file = export_python_snippet(question_data)    
+    test_file = export_test_cases(question_data)
+
+    # open the files in VS Code
+    cmd = shutil.which('code')
+    if cmd:
+        subprocess.run([cmd, py_file, test_file])
+    else:
+        print('Cannot find `code` command.')
+
 
 
 def main():
